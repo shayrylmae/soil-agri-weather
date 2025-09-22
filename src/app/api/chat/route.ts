@@ -21,14 +21,21 @@ interface SensorData {
   environment: EnvironmentData;
 }
 
+interface Message {
+  type: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+}
+
 interface ChatRequest {
   message: string;
   sensorData: SensorData;
+  conversationHistory?: Message[];
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, sensorData }: ChatRequest = await request.json();
+    const { message, sensorData, conversationHistory = [] }: ChatRequest = await request.json();
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -44,7 +51,16 @@ export async function POST(request: NextRequest) {
     const instructionFilePath = path.join(process.cwd(), 'system_instruction.md');
     const systemInstructions = fs.readFileSync(instructionFilePath, 'utf-8');
 
-    // Create the full prompt with current sensor data
+    // Build conversation context
+    let conversationContext = '';
+    if (conversationHistory.length > 0) {
+      conversationContext = `\n## Previous Conversation\n`;
+      conversationHistory.slice(-6).forEach((msg, index) => { // Include last 6 messages for context
+        conversationContext += `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`;
+      });
+    }
+
+    // Create the full prompt with current sensor data and conversation context
     const prompt = `${systemInstructions}
 
 ## Current Sensor Data
@@ -58,12 +74,12 @@ export async function POST(request: NextRequest) {
 ### Environmental Conditions
 - **Air Humidity**: ${sensorData.environment.humidity}%
 - **Sunlight Intensity**: ${sensorData.environment.sunlightIntensity} lux
-
-## User Question
+${conversationContext}
+## Current User Message
 ${message}
 
 ## Instructions
-Please analyze the current sensor data and provide a comprehensive response following the guidelines above.`;
+Please analyze the current sensor data and provide a comprehensive response. If this is a follow-up to a previous conversation, maintain context and continuity. For example, if you previously asked about providing a detailed analysis and the user responds with "yes" or "okay", provide that detailed analysis based on the previous context. Be conversational and remember what was discussed before.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

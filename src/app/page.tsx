@@ -162,7 +162,11 @@ export default function Home() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userInput, sensorData: sensorData }),
+        body: JSON.stringify({
+          message: userInput,
+          sensorData: sensorData,
+          conversationHistory: messages
+        }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -182,8 +186,8 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-green-50 to-blue-50 p-4 sm:p-6 lg:p-8 overflow-hidden">
-      <main className="max-w-7xl mx-auto flex flex-col h-full">
+    <div className="min-h-screen lg:h-screen bg-gradient-to-br from-slate-50 via-green-50 to-blue-50 p-4 sm:p-6 lg:p-8 lg:overflow-hidden">
+      <main className="max-w-7xl mx-auto flex flex-col lg:h-full">
         {/* --- HEADER --- */}
         <header className="text-center mb-10">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -196,7 +200,7 @@ export default function Home() {
         </header>
 
         {/* --- MAIN CONTENT GRID --- */}
-        <div className="flex-1 grid lg:grid-cols-2 gap-6 min-h-0">
+        <div className="flex flex-col lg:flex-1 lg:grid lg:grid-cols-2 gap-6 lg:min-h-0">
           {/* --- LEFT PANEL: SENSOR READINGS --- */}
           <section style={{backgroundColor: '#C5E2D9'}} className="rounded-3xl shadow-xl p-6 backdrop-blur-sm">
             <h2 className="text-2xl font-light text-black mb-6 flex items-center gap-3">
@@ -216,7 +220,7 @@ export default function Home() {
           </section>
 
           {/* --- RIGHT PANEL: AI CONSULTATION --- */}
-          <section className="bg-white bg-opacity-90 backdrop-blur-sm rounded-3xl shadow-xl p-6 flex flex-col min-h-0">
+          <section className="bg-white bg-opacity-90 backdrop-blur-sm rounded-3xl shadow-xl p-6 flex flex-col min-h-0 flex-1 lg:min-h-0 min-h-[60vh]">
             <h2 className="text-2xl font-light text-gray-800 mb-4 flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div>
               AI Consultation
