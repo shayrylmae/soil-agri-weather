@@ -1,0 +1,80 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NextRequest, NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
+
+interface SoilData {
+  moisture: number;
+  fertility: number;
+  ph: number;
+  temperature: number;
+  temperatureUnit: 'C' | 'F';
+}
+
+interface EnvironmentData {
+  humidity: number;
+  sunlightIntensity: number;
+}
+
+interface SensorData {
+  soil: SoilData;
+  environment: EnvironmentData;
+}
+
+interface ChatRequest {
+  message: string;
+  sensorData: SensorData;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { message, sensorData }: ChatRequest = await request.json();
+
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: 'Gemini API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Load system instructions from file
+    const instructionFilePath = path.join(process.cwd(), 'system_instruction.txt');
+    const systemInstructions = fs.readFileSync(instructionFilePath, 'utf-8');
+
+    // Create the full prompt with current sensor data
+    const prompt = `${systemInstructions}
+
+## Current Sensor Data
+
+### Soil Conditions
+- **Soil Moisture**: ${sensorData.soil.moisture}%
+- **Fertility (Electrical Conductivity)**: ${sensorData.soil.fertility} µS/cm
+- **pH Level**: ${sensorData.soil.ph}
+- **Soil Temperature**: ${sensorData.soil.temperature}°${sensorData.soil.temperatureUnit}
+
+### Environmental Conditions
+- **Air Humidity**: ${sensorData.environment.humidity}%
+- **Sunlight Intensity**: ${sensorData.environment.sunlightIntensity} lux
+
+## User Question
+${message}
+
+## Instructions
+Please analyze the current sensor data and provide a comprehensive response following the guidelines above.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json({ message: text });
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    return NextResponse.json(
+      { error: 'Failed to get AI response' },
+      { status: 500 }
+    );
+  }
+}
