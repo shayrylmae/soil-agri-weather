@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Load system instructions from file
-    const instructionFilePath = path.join(process.cwd(), 'system_instruction.ts');
+    const instructionFilePath = path.join(process.cwd(), 'system_instruction.md');
     const systemInstructions = fs.readFileSync(instructionFilePath, 'utf-8');
 
     // Create the full prompt with current sensor data
