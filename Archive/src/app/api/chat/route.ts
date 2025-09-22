@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Load system instructions from file
-    const instructionFilePath = path.join(process.cwd(), 'system_instruction.ts');
+    const instructionFilePath = path.join(process.cwd(), 'system_instruction.txt');
     const systemInstructions = fs.readFileSync(instructionFilePath, 'utf-8');
 
     // Create the full prompt with current sensor data
@@ -72,15 +72,6 @@ Please analyze the current sensor data and provide a comprehensive response foll
     return NextResponse.json({ message: text });
   } catch (error) {
     console.error('Error calling Gemini API:', error);
-
-    // Check if it's a service overload error
-    if (error instanceof Error && error.message.includes('overloaded')) {
-      return NextResponse.json(
-        { error: 'AI service is currently overloaded. Please try again in a few moments.' },
-        { status: 503 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Failed to get AI response' },
       { status: 500 }

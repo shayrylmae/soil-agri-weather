@@ -1,15 +1,17 @@
-# Soil Health Monitoring AI Chatbot
+# Soil Health AI
 
-A Next.js application that helps monitor soil health using AI-powered analysis. Users can input soil data (humidity, moisture, fertility) and chat with an AI assistant powered by Google's Gemini API for expert soil advice.
+An interactive soil monitoring dashboard with AI-powered analysis. Features interactive dial controls for real-time sensor data adjustment and intelligent recommendations powered by Google's Gemini AI to optimize plant growth conditions.
 
 ## Features
 
-- 📊 Real-time soil data input (humidity, moisture, fertility)
-- 🤖 AI-powered soil analysis using Google Gemini
-- 💬 Conversational interface for follow-up questions
-- 📱 Responsive design with Tailwind CSS
-- ⚡ Built with Next.js 15 and TypeScript
-- 🚀 Vercel deployment ready
+- 🎛️ **Interactive Dial Controls** - Touch/mouse-friendly dials for precise sensor data adjustment
+- 📊 **Comprehensive Monitoring** - Track soil moisture, fertility (EC), pH, temperature, humidity, and sunlight
+- 🌡️ **Dual Temperature Display** - Shows both Celsius and Fahrenheit readings
+- 🤖 **AI-Powered Analysis** - Get expert soil recommendations using Google Gemini AI
+- 💬 **Conversational Interface** - Chat with AI for follow-up questions and detailed guidance
+- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
+- ⚡ **Built with Next.js 15** - Modern React framework with TypeScript support
+- 🚀 **Vercel Deployment Ready** - Easy cloud deployment
 
 ## Setup Instructions
 
@@ -30,13 +32,17 @@ cp .env.example .env.local
 
 2. Get your Gemini API key:
    - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign in with your Google account
    - Create a new API key
-   - Copy the API key
+   - Copy the generated API key
 
 3. Update `.env.local` with your API key:
-```
+```bash
+# .env.local
 GEMINI_API_KEY=your_actual_api_key_here
 ```
+
+**Note**: The app uses Gemini 1.5 Flash model which requires a valid API key. Make sure your API key has appropriate quotas enabled.
 
 ### 3. Run Development Server
 
@@ -44,14 +50,36 @@ GEMINI_API_KEY=your_actual_api_key_here
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+The app will start with Turbopack for faster development. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Usage
+### 4. Build for Production
 
-1. **Enter Soil Data**: Input your soil's humidity (%), moisture (%), and fertility level (1-10)
-2. **Ask Questions**: Type questions about your soil health, plant recommendations, or growing advice
-3. **Get AI Analysis**: Receive expert advice from the AI based on your soil conditions
-4. **Continue Conversation**: Ask follow-up questions to get more specific guidance
+```bash
+npm run build
+npm start
+```
+
+## How to Use
+
+### 1. Adjust Sensor Readings
+Use the interactive dial controls to input your current readings:
+- **Soil Moisture**: 0-100% (drag the dial to adjust)
+- **Fertility (EC)**: 0-3000 µS/cm (electrical conductivity measurement)
+- **pH Level**: 1-14 pH (soil acidity/alkalinity)
+- **Temperature**: -10 to 50°C (displays both °C and °F)
+- **Humidity**: 0-100% (air humidity)
+- **Sunlight**: 0-2000 lux (light intensity)
+
+### 2. Get AI Analysis
+- Type questions about your soil conditions in the chat interface
+- Ask for plant recommendations based on your current readings
+- Request specific growing advice or troubleshooting help
+- Get explanations about optimal ranges for different plants
+
+### 3. Interactive Conversation
+- Continue the conversation with follow-up questions
+- Ask for clarification on any recommendations
+- Request seasonal adjustments or long-term monitoring strategies
 
 ## Deployment on Vercel
 
@@ -73,11 +101,13 @@ Make sure to add your `GEMINI_API_KEY` as an environment variable in your Vercel
 
 ## Technology Stack
 
-- **Framework**: Next.js 15 with App Router
+- **Framework**: Next.js 15 with App Router and Turbopack
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **AI Integration**: Google Gemini API
-- **Deployment**: Vercel
+- **Styling**: Tailwind CSS v4
+- **AI Integration**: Google Gemini 1.5 Flash API
+- **UI Components**: Custom interactive dial controls with SVG
+- **Markdown Rendering**: react-markdown with custom styling
+- **Deployment**: Vercel-optimized
 
 ## Project Structure
 
@@ -87,10 +117,14 @@ soil-data-monitor/
 │   ├── app/
 │   │   ├── api/chat/route.ts    # Gemini API integration
 │   │   ├── layout.tsx           # Root layout
-│   │   └── page.tsx             # Main application
+│   │   ├── page.tsx             # Main dashboard with dial controls
+│   │   └── globals.css          # Global styles
 ├── .env.example                 # Environment template
 ├── .env.local                   # Your API keys (gitignored)
-├── vercel.json                  # Vercel configuration
+├── package.json                 # Dependencies and scripts
+├── tailwind.config.ts           # Tailwind CSS configuration
+├── postcss.config.mjs           # PostCSS configuration
+├── system_instruction.ts        # AI system instructions
 └── README.md
 ```
 

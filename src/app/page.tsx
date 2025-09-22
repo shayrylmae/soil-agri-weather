@@ -164,13 +164,17 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userInput, sensorData: sensorData }),
       });
-      if (!response.ok) throw new Error('API response error');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'API response error');
+      }
       const data = await response.json();
       const aiMessage: Message = { type: 'ai', content: data.message, timestamp: new Date() };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error:', error);
-      const errorMessage: Message = { type: 'ai', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date() };
+      const errorContent = error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.';
+      const errorMessage: Message = { type: 'ai', content: errorContent, timestamp: new Date() };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -178,21 +182,21 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-blue-50 p-4 sm:p-6 lg:p-8">
-      <main className="max-w-7xl mx-auto flex flex-col" style={{minHeight: 'calc(100vh - 4rem)'}}>
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-green-50 to-blue-50 p-4 sm:p-6 lg:p-8 overflow-hidden">
+      <main className="max-w-7xl mx-auto flex flex-col h-full">
         {/* --- HEADER --- */}
         <header className="text-center mb-10">
-           <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-            </svg>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-6 h-6 bg-white rounded-full"></div>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-light text-gray-800">Soil Health AI</h1>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-light text-gray-800">Soil Health AI</h1>
           <p className="text-gray-600 font-light mt-2">AI-powered analysis for optimal plant growth</p>
         </header>
 
         {/* --- MAIN CONTENT GRID --- */}
-        <div className="flex-1 grid lg:grid-cols-2 gap-6">
+        <div className="flex-1 grid lg:grid-cols-2 gap-6 min-h-0">
           {/* --- LEFT PANEL: SENSOR READINGS --- */}
           <section style={{backgroundColor: '#C5E2D9'}} className="rounded-3xl shadow-xl p-6 backdrop-blur-sm">
             <h2 className="text-2xl font-light text-black mb-6 flex items-center gap-3">
@@ -205,19 +209,19 @@ export default function Home() {
                 <Dial value={sensorData.soil.moisture} min={0} max={100} unit="%" label="Moisture" onChange={(value) => setSensorData(prev => ({ ...prev, soil: { ...prev.soil, moisture: value } }))} />
                 <Dial value={sensorData.soil.fertility} min={0} max={3000} unit="µS/cm" label="Fertility" onChange={(value) => setSensorData(prev => ({ ...prev, soil: { ...prev.soil, fertility: value } }))} step={50} />
                 <Dial value={sensorData.soil.ph} min={1} max={14} unit="pH" label="pH Level" onChange={(value) => setSensorData(prev => ({ ...prev, soil: { ...prev.soil, ph: value } }))} step={0.1} />
-                <Dial value={sensorData.soil.temperature} min={-10} max={50} unit="" label="Temperature" knobColor="#EDB55E" displayValue={formatTemperatureDisplay(sensorData.soil.temperature, 'C').main} secondaryValue={formatTemperatureDisplay(sensorData.soil.temperature, 'C').secondary} onChange={(value) => setSensorData(prev => ({ ...prev, soil: { ...prev.soil, temperature: value } }))} />
-                <Dial value={sensorData.environment.humidity} min={0} max={100} unit="%" label="Humidity" knobColor="#EDB5E" onChange={(value) => setSensorData(prev => ({ ...prev, environment: { ...prev.environment, humidity: value } }))} />
-                <Dial value={sensorData.environment.sunlightIntensity} min={0} max={2000} unit="lux" label="Sunlight" knobColor="#EDB5E" onChange={(value) => setSensorData(prev => ({ ...prev, environment: { ...prev.environment, sunlightIntensity: value } }))} step={50} />
+                <Dial value={sensorData.soil.temperature} min={-10} max={50} unit="" label="Temperature" knobColor="#ffffff" displayValue={formatTemperatureDisplay(sensorData.soil.temperature, 'C').main} secondaryValue={formatTemperatureDisplay(sensorData.soil.temperature, 'C').secondary} onChange={(value) => setSensorData(prev => ({ ...prev, soil: { ...prev.soil, temperature: value } }))} />
+                <Dial value={sensorData.environment.humidity} min={0} max={100} unit="%" label="Humidity" knobColor="#EDB55E" onChange={(value) => setSensorData(prev => ({ ...prev, environment: { ...prev.environment, humidity: value } }))} />
+                <Dial value={sensorData.environment.sunlightIntensity} min={0} max={2000} unit="lux" label="Sunlight" knobColor="#EDB55E" onChange={(value) => setSensorData(prev => ({ ...prev, environment: { ...prev.environment, sunlightIntensity: value } }))} step={50} />
             </div>
           </section>
 
           {/* --- RIGHT PANEL: AI CONSULTATION --- */}
-          <section className="bg-white bg-opacity-90 backdrop-blur-sm rounded-3xl shadow-xl p-6 flex flex-col">
+          <section className="bg-white bg-opacity-90 backdrop-blur-sm rounded-3xl shadow-xl p-6 flex flex-col min-h-0">
             <h2 className="text-2xl font-light text-gray-800 mb-4 flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div>
               AI Consultation
             </h2>
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto bg-gray-50 bg-opacity-50 rounded-2xl p-4 space-y-4 mb-4">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto bg-gray-50 bg-opacity-50 rounded-2xl p-4 space-y-4 mb-4 min-h-0">
               {messages.length === 0 ? (
                 <div className="text-gray-500 text-center font-light flex flex-col justify-center items-center h-full"><div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div>Adjust sensor readings and ask a question!</div>
               ) : (
@@ -226,7 +230,24 @@ export default function Home() {
                     <div className={`max-w-sm lg:max-w-md px-4 py-3 rounded-2xl ${message.type === 'user' ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg' : 'bg-white text-gray-800 shadow-md border border-gray-100'}`}>
                       {message.type === 'ai' ? (
                         <div className="prose prose-sm prose-gray max-w-none">
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                          <ReactMarkdown
+                            components={{
+                              h2: ({children}) => {
+                                const text = children?.toString() || '';
+                                const targetHeadings = ['Current Status', 'Key Issues', 'Immediate Actions', 'Plant Suggestions'];
+                                const shouldStyle = targetHeadings.some(heading => text.includes(heading));
+                                if (shouldStyle) {
+                                  const needsTopMargin = ['Key Issues', 'Immediate Actions', 'Plant Suggestions'].some(heading => text.includes(heading));
+                                  return needsTopMargin ?
+                                    <h2 className="font-bold italic mt-4 text-teal-600">{children}</h2> :
+                                    <h2 className="font-bold italic text-teal-600">{children}</h2>;
+                                }
+                                return <h2>{children}</h2>;
+                              }
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
                         </div>
                       ) : (
                         <div className="whitespace-pre-wrap font-light leading-relaxed">{message.content}</div>
