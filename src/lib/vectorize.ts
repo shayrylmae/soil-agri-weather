@@ -48,7 +48,7 @@ const MOCK_PHILIPPINE_WEATHER_DATA: VectorizeDocument[] = [
 ];
 
 export class VectorizeService {
-  private pipelinesApi: any;
+  private pipelinesApi: PipelinesApi;
   private organizationId: string;
   private pipelineId: string;
   private isDevelopmentMode: boolean;
@@ -60,7 +60,7 @@ export class VectorizeService {
       accessToken: process.env.VECTORIZE_ACCESS_TOKEN,
       basePath: "https://api.vectorize.io/v1",
       // Enhanced timeout and retry configuration
-      fetchApi: (input: any, init: any = {}) => {
+      fetchApi: (input: RequestInfo | URL, init: RequestInit = {}) => {
         return fetch(input, {
           ...init,
           signal: AbortSignal.timeout(8000), // Reduced to 8 seconds for faster fallback
@@ -102,7 +102,6 @@ export class VectorizeService {
 
     // Retry logic with exponential backoff
     const maxRetries = 2;
-    let lastError: any;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -119,16 +118,16 @@ export class VectorizeService {
         console.log(`✅ Vectorize: Successfully retrieved ${documents.length} documents on attempt ${attempt}`);
         return documents;
 
-      } catch (error: any) {
-        lastError = error;
-        const isNetworkError = error?.cause?.code === 'ERR_SOCKET_CONNECTION_TIMEOUT' ||
-                              error?.message?.includes('fetch failed') ||
-                              error?.name === 'AbortError';
+      } catch (error: unknown) {
+        const errorObj = error as Error & { cause?: { code?: string; message?: string }; name?: string };
+        const isNetworkError = errorObj?.cause?.code === 'ERR_SOCKET_CONNECTION_TIMEOUT' ||
+                              errorObj?.message?.includes('fetch failed') ||
+                              errorObj?.name === 'AbortError';
 
         console.warn(`⚠️ Vectorize API Error (attempt ${attempt}/${maxRetries}):`, {
-          message: error?.message,
-          cause: error?.cause?.message,
-          code: error?.cause?.code,
+          message: errorObj?.message,
+          cause: errorObj?.cause?.message,
+          code: errorObj?.cause?.code,
           isNetworkError,
           org: this.organizationId,
           pipeline: this.pipelineId

@@ -35,8 +35,15 @@ interface ChatRequest {
 }
 
 export async function POST(request: NextRequest) {
+  // Default sensor data for error handling
+  let sensorData: SensorData = {
+    soil: { moisture: 0, fertility: 0, ph: 7, temperature: 20, temperatureUnit: 'C' },
+    environment: { humidity: 50, sunlightIntensity: 1000 }
+  };
+
   try {
-    const { message, sensorData, conversationHistory = [] }: ChatRequest = await request.json();
+    const { message, sensorData: requestSensorData, conversationHistory = [] }: ChatRequest = await request.json();
+    sensorData = requestSensorData;
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -62,7 +69,7 @@ export async function POST(request: NextRequest) {
       ragContext += `**IMPORTANT**: The following information should be your PRIMARY source for regional, weather, and forecast-related questions:\n\n`;
 
       documents.forEach((doc, index) => {
-        const content = doc.text || doc.content || doc.document || JSON.stringify(doc);
+        const content = doc.text || JSON.stringify(doc);
         ragContext += `### Knowledge Source ${index + 1}\n${content}\n\n`;
       });
 
@@ -80,7 +87,7 @@ export async function POST(request: NextRequest) {
     let conversationContext = '';
     if (conversationHistory.length > 0) {
       conversationContext = `\n## Previous Conversation\n`;
-      conversationHistory.slice(-6).forEach((msg, index) => { // Include last 6 messages for context
+      conversationHistory.slice(-6).forEach((msg) => { // Include last 6 messages for context
         conversationContext += `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`;
       });
     }
