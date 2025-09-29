@@ -168,12 +168,20 @@ export default function Home() {
           conversationHistory: messages
         }),
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API response error');
-      }
       const data = await response.json();
-      const aiMessage: Message = { type: 'ai', content: data.message, timestamp: new Date() };
+
+      // Handle both successful responses and fallback responses
+      if (!response.ok && data.error) {
+        throw new Error(data.error);
+      }
+
+      const aiMessage: Message = {
+        type: 'ai',
+        content: data.message,
+        timestamp: new Date(),
+        // Add a visual indicator for temporary responses
+        ...(data.isTemporaryResponse && { isTemporary: true })
+      };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error:', error);
@@ -266,7 +274,7 @@ export default function Home() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label htmlFor="question" className="flex items-center gap-2 text-sm font-light text-gray-700 mb-2"><svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Ask about your soil</label>
+                <label htmlFor="question" className="flex items-center gap-2 text-sm font-light text-gray-700 mb-2"><svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Ask about your soil sensor data or Agri-weather data</label>
                 <textarea id="question" value={userInput} onChange={(e) => setUserInput(e.target.value)} placeholder="e.g., How is my soil health?" rows={3} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-gray-800 font-light placeholder-gray-400 resize-none" />
               </div>
               <button type="submit" disabled={isLoading || !userInput.trim()} className="w-full bg-gradient-to-r from-blue-500 to-green-500 text-white font-light py-3 px-6 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 hover:from-blue-600 hover:to-green-600">
